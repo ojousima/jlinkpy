@@ -68,10 +68,10 @@ def get_jlink_dll():
     if sys.platform == 'win32':
         jlink, backend_info = locate_library('jlinkarm.dll', search_path)
     elif sys.platform == 'linux2':
-        jlink, backend_info = locate_library('libjlinkarm.so.4', 
+        jlink, backend_info = locate_library('libjlinkarm.so.5', 
                                              search_path, ctypes.cdll)
     elif sys.platform == 'darwin':
-        jlink, backend_info = locate_library('libjlinkarm.so.4.dylib', 
+        jlink, backend_info = locate_library('libjlinkarm.so.5.dylib', 
                                              search_path, ctypes.cdll)
     return jlink, backend_info
 
@@ -108,6 +108,7 @@ class JLink(object):
     def _init(self):
         self.tif_select(1)
         self.set_speed(1000)
+        self.set_device("NRF52832_XXAA")
         self.reset()
         pass
 
@@ -129,6 +130,8 @@ class JLink(object):
         return self.jl.JLINKARM_TIF_Select(tif)
     @check_err
     def set_speed(self, khz): return self.jl.JLINKARM_SetSpeed(khz)
+    @check_err
+    def set_device(self, device): return self.jl.JLINKARM_ExecCommand("device = " + device)
     @check_err
     def reset(self): return self.jl.JLINKARM_Reset()
     @check_err
