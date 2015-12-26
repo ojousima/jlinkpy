@@ -7,6 +7,7 @@ import memory
 
 DEBUG=0
 
+#NVMC base address, constants
 BASE=0x4001e000
 READY=BASE+0x400
 CONFIG=BASE+0x504
@@ -21,6 +22,7 @@ FICR_DEVID = 0x10000060
 FICR_DEVID_LEN = 8
 
 # ID of programmer. This is used to prevent flashing the JLINK device instead of remote target in event of bad connection
+# Set the device ID to match yours
 JLINK_ID = 0xede0e43d132d49ec
 
 def print_range(start, end, text=''):
@@ -168,7 +170,9 @@ class JLink(object):
     def go(self): return self.jl.JLINKARM_Go()
     @check_err
     def write_mem(self,startaddress, data):
-        buf=ctypes.create_string_buffer(data)
+        #print ("Data length: ")
+        #print (len(data))
+        buf=ctypes.create_string_buffer(bytes(data, 'utf-8'))
         return self.jl.JLINKARM_WriteMem(startaddress,len(data),buf)
     @check_err
     def read_mem(self, startaddress, length):
@@ -210,7 +214,7 @@ class JLink(object):
         self.write_U32(CONFIG,CONFIG_EEN)
         for i in range(startaddr, endaddr, 512):
             print(("0x%x (%d%%)\r"%(i,100*(i-startaddr)/(endaddr-startaddr))), end=' ')
-            sys.stdout.flush()
+            #sys.stdout.flush()
             self.write_U32(ERASEPAGE,i)            
             self._wait_ready()
 
@@ -218,8 +222,16 @@ class JLink(object):
         self._wait_ready()
 
     def erase_all(self):
+        config,_=self.read_mem_U32(CONFIG,1)
+        print(config[0])        
         self.write_U32(CONFIG, CONFIG_EEN)
+        config,_=self.read_mem_U32(CONFIG,1)
+        print(config[0])        
         self.write_U32(ERASEALL,1)
+        print("Waiting erase")
+        self.read_reg(0x10000FFC)
+        config,_=self.read_mem_U32(CONFIG,1)
+        print(config[0])        
         self._wait_ready()
         self.write_U32(CONFIG, CONFIG_REN)
         self._wait_ready()
@@ -261,20 +273,20 @@ class JLink(object):
                                              startaddress+len(mem_map)))
             self.write_mem(startaddress,''.join(mem_map))
 
+
         else:
             for s in segments:
                 print("writing from 0x%x->0x%x"%(s.startaddress,
                                                  s.startaddress+len(s.data)))
                 self.write_mem(s.startaddress,s.data)
 
-        #self.make_dump(0xa000,0x27c00,"written")
+
+        self.write_U32(CONFIG, CONFIG_REN)
+        self._wait_ready()
 
         self.reset()
 
         self.go()
-        #time.sleep(5)
-
-        self.pinreset()
 
         return
 

@@ -56,13 +56,17 @@ class Memory:
         startAddr   = 0
         lines = file.readlines()
         for l in lines:
+            #print(l)
             if not l.strip(): continue  #skip empty lines
-            if l[0] != ':': raise FileFormatError("line not valid intel hex data: '%s...'" % l[0:10])
+            if chr(l[0]) != ':': 
+                print ("Invalid line: " + str(l))
+                raise FileFormatError("line not valid intel hex data: '%s...'" % l[0:10])
             l = l.strip()               #fix CR-LF issues...
             length  = int(l[1:3],16)
             address = int(l[3:7],16) + extSegAddr
             type    = int(l[7:9],16)
             check   = int(l[-2:],16)
+            #print ("Identifying line type...")
             if type == 0x00:
                 if currentAddr != address:
                     if segmentdata:
@@ -75,11 +79,11 @@ class Memory:
             elif type == 0x02:
                 data=int(l[9:9+4],16)
                 extSegAddr = 16 * data
-                #print "2: Assign extSegAddr %x"%data
+                #print ("2: Assign extSegAddr %x"%data)
             elif type == 0x04:
                 data=int(l[9:9+4],16)
                 extSegAddr = 65536 * data
-                #print "4: Assign extLinAddr %x"%data
+                #print ("4: Assign extLinAddr %x"%data)
                 pass
             elif type == 0x03:
                 data=int(l[9:9+length*2],16)
@@ -88,7 +92,7 @@ class Memory:
             elif type == 0x05:
                 data=int(l[9:9+4*2],16)
                 self.applicationStartAddress=data
-                #print "5: Startaddr %x"%data
+                #print ("5: Startaddr %x"%data)
                 pass
             elif type == 0x01: # EOF
                 pass
@@ -180,11 +184,14 @@ class Memory:
         try:
             #first check extension
             try:
+                #print(filename)
                 if filename[-4:].lower() == '.txt':
                     self.loadTIText(fileobj)
                     return
                 elif filename[-4:].lower() in ('.a43', '.hex'):
+                    #print("Loading hex")
                     self.loadIHex(fileobj)
+                    #print("Loaded hex")
                     return
                 elif filename[-5:].lower() in ('.srec'):
                     self.loadSRec(fileobj)
