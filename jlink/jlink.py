@@ -16,6 +16,13 @@ CONFIG_REN=0
 ERASEPAGE=BASE+0x508
 ERASEALL=BASE+0x50c
 
+# unique ID of chip is at FICR_DEVID, 8 bytes
+FICR_DEVID = 0x10000060
+FICR_DEVID_LEN = 8
+
+# ID of programmer. This is used to prevent flashing the JLINK device instead of remote target in event of bad connection
+JLINK_ID = 0xede0e43d132d49ec
+
 def print_range(start, end, text=''):
     print(" | 0x%08x -> 0x%08x (%d bytes)"%(start, end, end-start), end=' ')
     print(text)
@@ -110,6 +117,11 @@ class JLink(object):
         self.set_speed(1000)
         self.set_device("NRF52832_XXAA")
         self.reset()
+        dev_id = self.read_id()
+        print("Connected to device with ID: " + hex(dev_id))
+        if dev_id == JLINK_ID:
+            print("Connected to JLINK, not target device. abort.")
+            raise ConnectionError("Not connected to external target. Please check power and data cables")
         pass
 
     def clear_error(self): self.jl.JLINK_ClrError()
@@ -131,7 +143,7 @@ class JLink(object):
     @check_err
     def set_speed(self, khz): return self.jl.JLINKARM_SetSpeed(khz)
     @check_err
-    def set_device(self, device): return self.jl.JLINKARM_ExecCommand("device = " + device)
+    def set_device(self, device): return self.jl.JLINKARM_ExecCommand(bytes("device = " + device, 'ascii'))
     @check_err
     def reset(self): return self.jl.JLINKARM_Reset()
     @check_err
@@ -291,6 +303,14 @@ class JLink(object):
         print_mem_map(mem)
         self.halt()
         self._burn_internal(mem.segments)
+
+    def read_id(self):
+        id_str = self.read_mem(FICR_DEVID, FICR_DEVID_LEN)
+        id = 0
+        for ii in range(0, FICR_DEVID_LEN):
+            id = id << 8
+            id += id_str[0].value[ii]
+        return id;
 
 
 def load_elf(filename):
