@@ -200,13 +200,13 @@ class JLink(object):
         self.set_tms()
     
     def erase_minimal(self, memory):
-        startaddress=min(s.startaddress for s in memory.segments)
-        endaddress=max(s.startaddress+len(s.data) for s in memory.segments)
-        binsize=endaddress-startaddress
-
-        startaddr=startaddress&~511
-        endaddr=startaddr+512*(1+((binsize-1)//512))
-        self.erase_partial(startaddr,endaddr)
+        for s in memory.segments:
+            startaddress = s.startaddress
+            endaddress   = s.startaddress+len(s.data)
+            binsize=endaddress-startaddress
+            startaddr=startaddress&~511
+            endaddr=startaddr+512*(1+((binsize-1)//512))
+            self.erase_partial(startaddr,endaddr)
 
     def erase_partial(self, startaddr, endaddr):
         print("erasing from 0x%x->0x%x"%(startaddr,endaddr))
