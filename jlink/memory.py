@@ -153,7 +153,7 @@ class Memory:
                 for i in l.split():
                     try:
                         segmentdata.append(chr(int(i,16)))
-                    except ValueError, e:
+                    except ValueError as e:
                         raise FileFormatError('File is no valid TI-Text (%s)' % e)
         if segmentdata:
             self.segments.append( Segment(startAddr, ''.join(segmentdata)) )

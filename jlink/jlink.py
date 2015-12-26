@@ -17,8 +17,8 @@ ERASEPAGE=BASE+0x508
 ERASEALL=BASE+0x50c
 
 def print_range(start, end, text=''):
-    print " | 0x%08x -> 0x%08x (%d bytes)"%(start, end, end-start),
-    print text
+    print(" | 0x%08x -> 0x%08x (%d bytes)"%(start, end, end-start), end=' ')
+    print(text)
 
 def print_segment(segment):
     return print_range(segment.startaddress, segment.startaddress + len(segment.data))
@@ -67,7 +67,7 @@ def get_jlink_dll():
 
     if sys.platform == 'win32':
         jlink, backend_info = locate_library('jlinkarm.dll', search_path)
-    elif sys.platform == 'linux2':
+    elif sys.platform == 'linux' or sys.platform == 'linux2':
         jlink, backend_info = locate_library('libjlinkarm.so.5', 
                                              search_path, ctypes.cdll)
     elif sys.platform == 'darwin':
@@ -88,14 +88,14 @@ class JLink(object):
             self.jl,self.jlink_lib_name = get_jlink_dll()
             try:
                 self._init()
-                if retried: print "success"
+                if retried: print("success")
                 return
-            except JLinkException,x:
+            except JLinkException as x:
                 if x.args[0]==-258:
                     new_elapsed=int(time.time()-t0)
                     if new_elapsed != elapsed:
                         elapsed=new_elapsed                     
-                        print timeout-elapsed,
+                        print(timeout-elapsed, end=' ')
                         sys.stdout.flush()
 
                     retried=True
@@ -193,11 +193,11 @@ class JLink(object):
         self.erase_partial(startaddr,endaddr)
 
     def erase_partial(self, startaddr, endaddr):
-        print "erasing from 0x%x->0x%x"%(startaddr,endaddr)
+        print("erasing from 0x%x->0x%x"%(startaddr,endaddr))
 
         self.write_U32(CONFIG,CONFIG_EEN)
         for i in range(startaddr, endaddr, 512):
-            print("0x%x (%d%%)\r"%(i,100*(i-startaddr)/(endaddr-startaddr))),
+            print(("0x%x (%d%%)\r"%(i,100*(i-startaddr)/(endaddr-startaddr))), end=' ')
             sys.stdout.flush()
             self.write_U32(ERASEPAGE,i)            
             self._wait_ready()
@@ -245,14 +245,14 @@ class JLink(object):
                 s1=s0+len(s.data)
                 mem_map[s0:s1]=s.data[:]
 
-            print "writing from 0x%x->0x%x"%(startaddress,
-                                             startaddress+len(mem_map))
+            print("writing from 0x%x->0x%x"%(startaddress,
+                                             startaddress+len(mem_map)))
             self.write_mem(startaddress,''.join(mem_map))
 
         else:
             for s in segments:
-                print "writing from 0x%x->0x%x"%(s.startaddress,
-                                                 s.startaddress+len(s.data))
+                print("writing from 0x%x->0x%x"%(s.startaddress,
+                                                 s.startaddress+len(s.data)))
                 self.write_mem(s.startaddress,s.data)
 
         #self.make_dump(0xa000,0x27c00,"written")
@@ -268,17 +268,17 @@ class JLink(object):
 
         
     def burnfile(self,filename):
-        print
-        print "map of %s:"%filename
+        print()
+        print("map of %s:"%filename)
         progdata=load_elf(filename)
         print_mem_map(progdata)
-        print
+        print()
         return self.burn(progdata)
 
     def burnsoftdevice(self,softdevice_filename):
         mem=load_elf(softdevice_filename)
         print_mem_map(mem)
-        print
+        print()
 
         self.halt()
         self.erase_all()

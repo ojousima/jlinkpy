@@ -41,12 +41,12 @@ if __name__=="__main__":
             endaddr = int(args.pop(),base=0)
             filename = args.pop(0)
             jl().halt()
-            print 'Dumping %x -> %x to file "%s"'%(startaddr,
+            print('Dumping %x -> %x to file "%s"'%(startaddr,
                                                    endaddr,
-                                                   filename)
+                                                   filename))
             jl().make_dump(startaddr,endaddr,filename)
 
         else:
-            print "unknown argument: ",arg
+            print("unknown argument: ",arg)
             sys.exit(-1)
 
