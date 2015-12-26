@@ -1,1 +1,2 @@
 jlink/lib*/*
+*__pycache__*
