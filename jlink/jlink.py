@@ -222,16 +222,9 @@ class JLink(object):
         self._wait_ready()
 
     def erase_all(self):
-        config,_=self.read_mem_U32(CONFIG,1)
-        print(config[0])        
         self.write_U32(CONFIG, CONFIG_EEN)
-        config,_=self.read_mem_U32(CONFIG,1)
-        print(config[0])        
         self.write_U32(ERASEALL,1)
-        print("Waiting erase")
         self.read_reg(0x10000FFC)
-        config,_=self.read_mem_U32(CONFIG,1)
-        print(config[0])        
         self._wait_ready()
         self.write_U32(CONFIG, CONFIG_REN)
         self._wait_ready()
