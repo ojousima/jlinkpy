@@ -257,12 +257,10 @@ class JLink(object):
 
         #self.make_dump(0xa000,0x27c00,"written")
 
-        self.reset()
+        self.write_U32(CONFIG, CONFIG_REN)
+        self._wait_ready()
 
-        self.go()
         #time.sleep(5)
-
-        self.pinreset()
 
         return
 
